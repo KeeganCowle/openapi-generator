@@ -848,7 +848,6 @@ public abstract class AbstractPythonCodegen extends DefaultCodegen implements Co
         for (ModelMap m : objs.getModels()) {
             TreeSet<String> exampleImports = new TreeSet<>();
             TreeSet<String> postponedExampleImports = new TreeSet<>();
-            List<String> readOnlyFields = new ArrayList<>();
             hasModelsToImport = false;
             int property_count = 1;
 
@@ -915,16 +914,6 @@ public abstract class AbstractPythonCodegen extends DefaultCodegen implements Co
                 }
             }
 
-            // if model_generic.mustache is used
-            if (model.oneOf.isEmpty() && model.anyOf.isEmpty() && !model.isEnum) {
-                moduleImports.add("typing", "ClassVar");
-                moduleImports.add("typing", "Dict");
-                moduleImports.add("typing", "Any");
-                if (this.disallowAdditionalPropertiesIfNotPresent || model.isAdditionalPropertiesTrue) {
-                    moduleImports.add("typing", "List");
-                }
-            }
-
             // if pydantic model
             if (!model.isEnum) {
                 moduleImports.add("pydantic", "ConfigDict");
@@ -932,11 +921,6 @@ public abstract class AbstractPythonCodegen extends DefaultCodegen implements Co
 
             //loop through properties/schemas to set up typing, pydantic
             for (CodegenProperty cp : codegenProperties) {
-                // is readOnly?
-                if (cp.isReadOnly) {
-                    readOnlyFields.add(cp.name);
-                }
-
                 String typing = pydantic.generatePythonType(cp);
                 cp.vendorExtensions.put("x-py-typing", typing);
 
@@ -973,9 +957,6 @@ public abstract class AbstractPythonCodegen extends DefaultCodegen implements Co
                     }
                 }
             }
-
-            // set the extensions if the key is absent
-            model.getVendorExtensions().putIfAbsent("x-py-readonly", readOnlyFields);
 
             // remove the items of postponedModelImports in modelImports to avoid circular imports error
             if (!modelImports.isEmpty() && !postponedModelImports.isEmpty()) {
@@ -1788,7 +1769,7 @@ public abstract class AbstractPythonCodegen extends DefaultCodegen implements Co
                 PythonType pt = new PythonType("str");
 
                 // e.g. constr(regex=r'/[a-z]/i', strict=True)
-                pt.constrain("strict", true);
+                pt.annotate("strict", true);
                 if (cp.getMaxLength() != null) {
                     pt.constrain("max_length", cp.getMaxLength());
                 }
@@ -1796,11 +1777,6 @@ public abstract class AbstractPythonCodegen extends DefaultCodegen implements Co
                     pt.constrain("min_length", cp.getMinLength());
                 }
 
-                if (cp.getPattern() != null) {
-                    moduleImports.add("pydantic", "field_validator");
-                    // use validator instead as regex doesn't support flags, e.g. IGNORECASE
-                    //fieldCustomization.add(Locale.ROOT, String.format(Locale.ROOT, "regex=r'%s'", cp.getPattern()));
-                }
                 return pt;
             } else {
                 if ("password".equals(cp.getFormat())) { // TODO avoid using format, use `is` boolean flag instead
@@ -1926,11 +1902,6 @@ public abstract class AbstractPythonCodegen extends DefaultCodegen implements Co
                 if (cp.getMinLength() != null) {
                     bytest.constrain("min_length", cp.getMinLength());
                     strt.constrain("min_length", cp.getMinLength());
-                }
-                if (cp.getPattern() != null) {
-                    moduleImports.add("pydantic", "field_validator");
-                    // use validator instead as regex doesn't support flags, e.g. IGNORECASE
-                    //fieldCustomization.add(Locale.ROOT, String.format(Locale.ROOT, "regex=r'%s'", cp.getPattern()));
                 }
 
                 moduleImports.add("typing", "Union");
@@ -2171,6 +2142,14 @@ public abstract class AbstractPythonCodegen extends DefaultCodegen implements Co
                         pt.setDefaultValue(cp.defaultValue);
                     }
                 }
+            }
+
+            if (cp.isReadOnly) {
+                pt.annotate("frozen", true);  // Mark field as frozen
+            }
+            if (cp.getPattern() != null) {
+                // field has a pattern
+                pt.annotate("pattern", cp.getPattern());
             }
 
             String typeConstraint = pt.asTypeConstraint(moduleImports);
