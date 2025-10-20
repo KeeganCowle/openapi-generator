@@ -20,9 +20,8 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, field_validator
-from typing import Any, ClassVar, Dict, List, Optional
-from typing_extensions import Annotated
+from pydantic import BaseModel, ConfigDict, Field, StrictInt
+from typing import Optional
 try:
     from typing import Self
 except ImportError:
@@ -33,7 +32,7 @@ class Category(BaseModel):
     A category for a pet
     """ # noqa: E501
     id: Optional[StrictInt] = None
-    name: Optional[Annotated[str, Field(strict=True)]] = None
+    name: Optional[str] = Field(default=None, pattern="/^[a-zA-Z0-9]+[a-zA-Z0-9\.\-_]*[a-zA-Z0-9]+$/")
     __properties: ClassVar[List[str]] = ["id", "name"]
 
     @field_validator('name')

@@ -23,7 +23,7 @@ from fastapi import (  # noqa: F401
 )
 
 from openapi_server.models.extra_models import TokenModel  # noqa: F401
-from pydantic import Field, StrictStr, field_validator
+from pydantic import Field, StrictStr
 from typing import Any, List
 from typing_extensions import Annotated
 from openapi_server.models.user import User
@@ -110,7 +110,7 @@ async def create_users_with_list_input(
     response_model_by_alias=True,
 )
 async def login_user(
-    username: Annotated[str, Field(strict=True, description="The user name for login")] = Query(None, description="The user name for login", alias="username", regex=r"/^[a-zA-Z0-9]+[a-zA-Z0-9\.\-_]*[a-zA-Z0-9]+$/"),
+    username: Annotated[str, Field(description="The user name for login", strict=True)] = Query(None, description="The user name for login", alias="username", regex=r"/^[a-zA-Z0-9]+[a-zA-Z0-9\.\-_]*[a-zA-Z0-9]+$/"),
     password: Annotated[StrictStr, Field(description="The password for login in clear text")] = Query(None, description="The password for login in clear text", alias="password"),
 ) -> str:
     """"""

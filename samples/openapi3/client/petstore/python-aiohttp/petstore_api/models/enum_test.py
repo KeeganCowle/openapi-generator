@@ -12,21 +12,15 @@
 """  # noqa: E501
 
 
-from __future__ import annotations
-import pprint
-import re  # noqa: F401
-import json
-
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
-from typing import Any, ClassVar, Dict, List, Optional
+from typing import Optional
 from petstore_api.models.enum_number_vendor_ext import EnumNumberVendorExt
 from petstore_api.models.enum_string_vendor_ext import EnumStringVendorExt
 from petstore_api.models.outer_enum import OuterEnum
 from petstore_api.models.outer_enum_default_value import OuterEnumDefaultValue
 from petstore_api.models.outer_enum_integer import OuterEnumInteger
 from petstore_api.models.outer_enum_integer_default_value import OuterEnumIntegerDefaultValue
-from typing import Optional, Set
-from typing_extensions import Self
+
 
 class EnumTest(BaseModel):
     """
@@ -45,7 +39,6 @@ class EnumTest(BaseModel):
     outer_enum_integer_default_value: Optional[OuterEnumIntegerDefaultValue] = Field(default=OuterEnumIntegerDefaultValue.NUMBER_0, alias="outerEnumIntegerDefaultValue")
     enum_number_vendor_ext: Optional[EnumNumberVendorExt] = Field(default=None, alias="enumNumberVendorExt")
     enum_string_vendor_ext: Optional[EnumStringVendorExt] = Field(default=None, alias="enumStringVendorExt")
-    __properties: ClassVar[List[str]] = ["enum_string", "enum_string_required", "enum_integer_default", "enum_integer", "enum_number", "enum_string_single_member", "enum_integer_single_member", "outerEnum", "outerEnumInteger", "outerEnumDefaultValue", "outerEnumIntegerDefaultValue", "enumNumberVendorExt", "enumStringVendorExt"]
 
     @field_validator('enum_string')
     def enum_string_validate_enum(cls, value):
@@ -115,75 +108,20 @@ class EnumTest(BaseModel):
         return value
 
     model_config = ConfigDict(
-        populate_by_name=True,
         validate_assignment=True,
-        protected_namespaces=(),
+        extra='forbid',
     )
 
+    # Deprecated. Use model_inst.model_dump_json(by_alias=True, exclude_unset=True) instead
+    # def to_json(self) -> str:
 
-    def to_str(self) -> str:
-        """Returns the string representation of the model using alias"""
-        return pprint.pformat(self.model_dump(by_alias=True))
+    # Deprecated. Use EnumTest.model_validate_json(json_str)
+    # @classmethod
+    # def from_json(cls, json_str: str):
 
-    def to_json(self) -> str:
-        """Returns the JSON representation of the model using alias"""
-        # TODO: pydantic v2: use .model_dump_json(by_alias=True, exclude_unset=True) instead
-        return json.dumps(self.to_dict())
+    # Deprecated. Use EnumTest.model_validate(obj)
+    # @classmethod
+    # def from_dict(cls, obj: Dict[str, Any]):
 
-    @classmethod
-    def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of EnumTest from a JSON string"""
-        return cls.from_dict(json.loads(json_str))
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Return the dictionary representation of the model using alias.
-
-        This has the following differences from calling pydantic's
-        `self.model_dump(by_alias=True)`:
-
-        * `None` is only added to the output dict for nullable fields that
-          were set at model initialization. Other fields with value `None`
-          are ignored.
-        """
-        excluded_fields: Set[str] = set([
-        ])
-
-        _dict = self.model_dump(
-            by_alias=True,
-            exclude=excluded_fields,
-            exclude_none=True,
-        )
-        # set to None if outer_enum (nullable) is None
-        # and model_fields_set contains the field
-        if self.outer_enum is None and "outer_enum" in self.model_fields_set:
-            _dict['outerEnum'] = None
-
-        return _dict
-
-    @classmethod
-    def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of EnumTest from a dict"""
-        if obj is None:
-            return None
-
-        if not isinstance(obj, dict):
-            return cls.model_validate(obj)
-
-        _obj = cls.model_validate({
-            "enum_string": obj.get("enum_string"),
-            "enum_string_required": obj.get("enum_string_required"),
-            "enum_integer_default": obj.get("enum_integer_default") if obj.get("enum_integer_default") is not None else 5,
-            "enum_integer": obj.get("enum_integer"),
-            "enum_number": obj.get("enum_number"),
-            "enum_string_single_member": obj.get("enum_string_single_member"),
-            "enum_integer_single_member": obj.get("enum_integer_single_member"),
-            "outerEnum": obj.get("outerEnum"),
-            "outerEnumInteger": obj.get("outerEnumInteger"),
-            "outerEnumDefaultValue": obj.get("outerEnumDefaultValue") if obj.get("outerEnumDefaultValue") is not None else OuterEnumDefaultValue.PLACED,
-            "outerEnumIntegerDefaultValue": obj.get("outerEnumIntegerDefaultValue") if obj.get("outerEnumIntegerDefaultValue") is not None else OuterEnumIntegerDefaultValue.NUMBER_0,
-            "enumNumberVendorExt": obj.get("enumNumberVendorExt"),
-            "enumStringVendorExt": obj.get("enumStringVendorExt")
-        })
-        return _obj
 
 

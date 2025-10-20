@@ -2,7 +2,7 @@
 
 from typing import ClassVar, Dict, List, Tuple  # noqa: F401
 
-from pydantic import Field, StrictStr, field_validator
+from pydantic import Field, StrictStr
 from typing import Any, List
 from typing_extensions import Annotated
 from openapi_server.models.user import User
@@ -40,7 +40,7 @@ class BaseUserApi:
 
     async def login_user(
         self,
-        username: Annotated[str, Field(strict=True, description="The user name for login")],
+        username: Annotated[str, Field(description="The user name for login", strict=True)],
         password: Annotated[StrictStr, Field(description="The password for login in clear text")],
     ) -> str:
         """"""

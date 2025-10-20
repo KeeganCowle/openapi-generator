@@ -12,16 +12,10 @@
 """  # noqa: E501
 
 
-from __future__ import annotations
-import pprint
-import re  # noqa: F401
-import json
-
 from importlib import import_module
 from pydantic import BaseModel, ConfigDict, Field, StrictStr
-from typing import Any, ClassVar, Dict, List, Union
-from typing import Optional, Set
-from typing_extensions import Self
+from typing import Union
+
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -32,15 +26,11 @@ class DiscriminatorAllOfSuper(BaseModel):
     DiscriminatorAllOfSuper
     """ # noqa: E501
     element_type: StrictStr = Field(alias="elementType")
-    __properties: ClassVar[List[str]] = ["elementType"]
 
     model_config = ConfigDict(
-        populate_by_name=True,
         validate_assignment=True,
-        protected_namespaces=(),
+        extra='forbid',
     )
-
-
     # JSON field name that stores the object type
     __discriminator_property_name: ClassVar[str] = 'elementType'
 
@@ -58,50 +48,17 @@ class DiscriminatorAllOfSuper(BaseModel):
         else:
             return None
 
-    def to_str(self) -> str:
-        """Returns the string representation of the model using alias"""
-        return pprint.pformat(self.model_dump(by_alias=True))
 
-    def to_json(self) -> str:
-        """Returns the JSON representation of the model using alias"""
-        # TODO: pydantic v2: use .model_dump_json(by_alias=True, exclude_unset=True) instead
-        return json.dumps(self.to_dict())
+    # Deprecated. Use model_inst.model_dump_json(by_alias=True, exclude_unset=True) instead
+    # def to_json(self) -> str:
 
-    @classmethod
-    def from_json(cls, json_str: str) -> Optional[Union[DiscriminatorAllOfSub]]:
-        """Create an instance of DiscriminatorAllOfSuper from a JSON string"""
-        return cls.from_dict(json.loads(json_str))
+    # Deprecated. Use DiscriminatorAllOfSuper.model_validate_json(json_str)
+    # @classmethod
+    # def from_json(cls, json_str: str):
 
-    def to_dict(self) -> Dict[str, Any]:
-        """Return the dictionary representation of the model using alias.
+    # Deprecated. Use DiscriminatorAllOfSuper.model_validate(obj)
+    # @classmethod
+    # def from_dict(cls, obj: Dict[str, Any]):
 
-        This has the following differences from calling pydantic's
-        `self.model_dump(by_alias=True)`:
-
-        * `None` is only added to the output dict for nullable fields that
-          were set at model initialization. Other fields with value `None`
-          are ignored.
-        """
-        excluded_fields: Set[str] = set([
-        ])
-
-        _dict = self.model_dump(
-            by_alias=True,
-            exclude=excluded_fields,
-            exclude_none=True,
-        )
-        return _dict
-
-    @classmethod
-    def from_dict(cls, obj: Dict[str, Any]) -> Optional[Union[DiscriminatorAllOfSub]]:
-        """Create an instance of DiscriminatorAllOfSuper from a dict"""
-        # look up the object type based on discriminator mapping
-        object_type = cls.get_discriminator_value(obj)
-        if object_type ==  'DiscriminatorAllOfSub':
-            return import_module("petstore_api.models.discriminator_all_of_sub").DiscriminatorAllOfSub.from_dict(obj)
-
-        raise ValueError("DiscriminatorAllOfSuper failed to lookup discriminator value from " +
-                            json.dumps(obj) + ". Discriminator property name: " + cls.__discriminator_property_name +
-                            ", mapping: " + json.dumps(cls.__discriminator_value_class_map))
 
 
